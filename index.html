@@ -1,0 +1,115 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitação de Veículo</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</head>
+<body class="bg-dark text-white min-h-screen flex flex-col items-center p-4">
+  <h1 class="text-3xl font-bold mb-6 text-blue-light">Solicitação de Veículo</h1>
+  <div class="mb-4">
+    <a href="index.html" class="bg-blue-dark text-white p-2 rounded hover:bg-blue-hover mr-2">Solicitar</a>
+    <a href="analyst.html" class="bg-blue-dark text-white p-2 rounded hover:bg-blue-hover">Análise</a>
+  </div>
+  <div class="w-full max-w-6xl flex mx-negative-4">
+    <div class="w-full md-w-half px-4 mb-4">
+      <form id="requestForm" class="bg-gray-dark p-6 rounded-lg shadow-lg">
+        <div class="mb-4">
+          <label class="block text-blue-light">Endereço de Origem</label>
+          <input type="text" id="origin" class="w-full p-2 border rounded bg-gray-medium text-white" value="Av. Prof. Moraes Rego, s/n, Cidade Universitária, Recife - PE, 50740-465" disabled>
+        </div>
+        <div class="mb-4">
+          <label class="block text-blue-light">CEP de Destino</label>
+          <input type="text" id="destinationCep" class="w-full p-2 border rounded bg-gray-medium text-white" placeholder="Ex.: 12345-678" pattern="\d{5}-?\d{3}" title="Formato: 12345-678 ou 12345678" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-blue-light">Descrição do Endereço de Destino</label>
+          <input type="text" id="destinationDescription" class="w-full p-2 border rounded bg-gray-medium text-white" placeholder="Ex.: Rua das Flores, 123, apto 101" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-blue-light">E-mail para Confirmação</label>
+          <input type="email" id="email" class="w-full p-2 border rounded bg-gray-medium text-white" placeholder="Ex.: usuario@exemplo.com" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-blue-light">Data e Horário Desejados</label>
+          <input type="text" id="requestedDateTime" class="w-full p-2 border rounded bg-gray-medium text-white" placeholder="Selecione data e horário" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-blue-light">Motivo</label>
+          <textarea id="reason" class="w-full p-2 border rounded bg-gray-medium text-white" placeholder="Descreva o motivo da solicitação" required></textarea>
+        </div>
+        <div class="mb-4">
+          <label class="block text-blue-light">Tipo de Carro</label>
+          <select id="carType" class="w-full p-2 border rounded bg-gray-medium text-white" required>
+            <option value="sedan">Sedan</option>
+            <option value="suv">SUV</option>
+            <option value="van">Van</option>
+          </select>
+        </div>
+        <button type="submit" class="bg-blue-dark text-white p-2 rounded hover:bg-blue-hover w-full">Enviar Solicitação</button>
+      </form>
+    </div>
+    <div class="w-full md-w-half px-4 mb-4">
+      <div id="map" class="w-full h-96 rounded-lg shadow-lg"></div>
+    </div>
+  </div>
+<div id="modal" class="fixed top-[200px] left-[0px] flex items-start justify-start w-full h-full hidden transition-opacity duration-300 z-50">
+  <div class="self-start bg-gray-400 p-8 rounded-xl shadow-2xl max-w-md w-full sm:w-auto transform transition-transform duration-300 ml-[50px]">
+    <h3 id="modalTitle" class="text-2xl font-semibold mb-4 text-black"></h3>
+    <p id="modalMessage" class="mb-6 text-black"></p>
+    <div class="flex justify-end space-x-4">
+      <button id="modalCancel" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 hidden transition-colors duration-200">Cancelar</button>
+      <button id="modalConfirm" class="bg-blue-800 text-white px-4 py-2 rounded-lg hover:bg-blue-900 transition-colors duration-200">OK</button>
+    </div>
+  </div>
+</div>
+  <script src="app.js"></script>
+  <script src="request.js"></script>
+</body>
+</html>
