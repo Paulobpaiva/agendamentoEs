@@ -3,7 +3,7 @@
 🔗 **Acesse a aplicação online:**  
 👉 [Clique Aqui](https://paulobpaiva.github.io/agendamentoEs)
 
-Sistema web para solicitação e análise de transporte de veículos, desenvolvido como parte de um projeto acadêmico na **UFPE**. A aplicação permite que usuários solicitem veículos a partir de um ponto de origem fixo, visualizem rotas no mapa, recebam confirmações por e-mail e gerenciem o status das solicitações.
+A aplicação permite que usuários solicitem veículos a partir de um ponto de origem fixo, visualizem rotas no mapa, recebam confirmações por e-mail e gerenciem o status das solicitações.
 
 ---
 
