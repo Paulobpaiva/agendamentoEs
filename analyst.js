@@ -1,91 +1,87 @@
-function loadRequests(status) {
-  console.log(`Carregando solicitações com status: ${status}`);
-  const requests = getFromStorage('requests').filter(request => request.status === status);
-  console.log(`Solicitações filtradas (${status}):`, requests);
-  const tbody = document.getElementById(`${status}Requests`);
-  if (!tbody) {
-    console.error(`Tabela ${status}Requests não encontrada`);
-    return;
-  }
-  tbody.innerHTML = '';
-  requests.forEach(request => {
+function loadRequests(status, tableBodyId) {
+  const requests = getFromStorage('requests').filter(req => req.status === status);
+  const tableBody = document.getElementById(tableBodyId);
+  tableBody.innerHTML = '';
+  console.log(`Carregando solicitações com status: ${status}`, requests);
+
+  requests.forEach(req => {
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td>${request.id}</td>
-      <td>${request.destinationDescription}</td>
-      <td>${new Date(request.requestedDateTime).toLocaleString('pt-BR')}</td>
-      <td>${request.carType}</td>
-      <td>${request.reason}</td>
+      <td>${req.id}</td>
+      <td>${req.destinationDescription}</td>
+      <td>${new Date(req.requestedDateTime).toLocaleString('pt-BR')}</td>
+      <td>${req.carType}</td>
+      <td>${req.reason}</td>
       ${status === 'pendente' ? `
         <td>
-          <button onclick="showApproveModal(${request.id})" class="bg-blue-dark text-white p-2 rounded hover:bg-blue-hover">Aprovar</button>
-          <button onclick="rejectRequest(${request.id})" class="bg-gray-medium text-white p-2 rounded hover:bg-gray-hover">Rejeitar</button>
-        </td>` : ''}
+          <button class="approve-btn bg-blue-dark text-white p-2 rounded hover:bg-blue-hover mr-2" data-id="${req.id}">Aprovar</button>
+          <button class="reject-btn bg-gray-medium text-white p-2 rounded hover:bg-gray-hover" data-id="${req.id}">Rejeitar</button>
+        </td>
+      ` : ''}
     `;
-    tbody.appendChild(row);
+    tableBody.appendChild(row);
   });
+
+  if (status === 'pendente') {
+    document.querySelectorAll('.approve-btn').forEach(btn => {
+      btn.addEventListener('click', () => showApproveModal(btn.dataset.id));
+    });
+    document.querySelectorAll('.reject-btn').forEach(btn => {
+      btn.addEventListener('click', () => rejectRequest(btn.dataset.id));
+    });
+  }
 }
 
 function showApproveModal(requestId) {
-  const modal = document.getElementById('approveModal');
-  if (!modal) {
-    console.error('Modal de aprovação não encontrado');
-    return;
-  }
-  const drivers = getFromStorage('drivers');
+  console.log('Exibindo modal de aprovação para solicitação:', requestId);
+  const modal = new bootstrap.Modal(document.getElementById('approveModal'));
   const driverSelect = document.getElementById('driverSelect');
-  if (!driverSelect) {
-    console.error('Elemento driverSelect não encontrado');
-    return;
-  }
-  driverSelect.innerHTML = '<option value="">Selecione um motorista</option>';
-  drivers.forEach(driver => {
-    const option = document.createElement('option');
-    option.value = driver.id;
-    option.textContent = driver.name;
-    driverSelect.appendChild(option);
-  });
-  modal.classList.remove('hidden');
-  document.getElementById('modalConfirm').onclick = () => approveRequest(requestId);
-  document.getElementById('modalCancel').onclick = () => modal.classList.add('hidden');
+  const modalConfirm = document.getElementById('modalConfirm');
+  const modalCancel = document.getElementById('modalCancel');
+
+  driverSelect.innerHTML = `
+    <option value="motorista1">Motorista 1</option>
+    <option value="motorista2">Motorista 2</option>
+    <option value="motorista3">Motorista 3</option>
+  `;
+
+  modalConfirm.onclick = () => {
+    const driver = driverSelect.value;
+    approveRequest(requestId, driver);
+    modal.hide();
+  };
+  modalCancel.onclick = () => modal.hide();
+
+  modal.show();
 }
 
-function approveRequest(requestId) {
-  const driverId = document.getElementById('driverSelect').value;
-  if (!driverId) {
-    alert('Selecione um motorista.');
-    return;
-  }
+function approveRequest(requestId, driver) {
+  console.log(`Aprovando solicitação ${requestId} com motorista ${driver}`);
   const requests = getFromStorage('requests');
-  const request = requests.find(r => r.id === requestId);
-  if (!request) {
-    console.error(`Solicitação ${requestId} não encontrada`);
-    return;
+  const request = requests.find(req => req.id == requestId);
+  if (request) {
+    request.status = 'aprovado';
+    request.driver = driver;
+    saveToStorage('requests', requests);
+    loadRequests('pendente', 'pendenteRequests');
+    loadRequests('aprovado', 'aprovadoRequests');
   }
-  request.status = 'aprovado';
-  request.driverId = driverId;
-  request.vehicleId = getFromStorage('vehicles').find(v => v.type === request.carType).id;
-  saveToStorage('requests', requests);
-  document.getElementById('approveModal').classList.add('hidden');
-  loadRequests('pendente');
-  loadRequests('aprovado');
 }
 
 function rejectRequest(requestId) {
+  console.log(`Rejeitando solicitação ${requestId}`);
   const requests = getFromStorage('requests');
-  const request = requests.find(r => r.id === requestId);
-  if (!request) {
-    console.error(`Solicitação ${requestId} não encontrada`);
-    return;
+  const request = requests.find(req => req.id == requestId);
+  if (request) {
+    request.status = 'rejeitado';
+    saveToStorage('requests', requests);
+    loadRequests('pendente', 'pendenteRequests');
+    loadRequests('rejeitado', 'rejeitadoRequests');
   }
-  request.status = 'rejeitado';
-  saveToStorage('requests', requests);
-  loadRequests('pendente');
-  loadRequests('rejeitado');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadRequests('pendente');
-  loadRequests('aprovado');
-  loadRequests('rejeitado');
+  loadRequests('pendente', 'pendenteRequests');
+  loadRequests('aprovado', 'aprovadoRequests');
+  loadRequests('rejeitado', 'rejeitadoRequests');
 });

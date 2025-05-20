@@ -119,48 +119,12 @@ body {
   height: 384px;
 }
 
-.items-start {
-  align-items: flex-start;
+.bg-gray-400 {
+  background-color: #9ca3af;
 }
 
-.justify-start {
-  justify-content: flex-start;
-}
-
-.hidden {
-  display: none;
-}
-
-.transition-opacity {
-  transition: opacity 0.3s ease-in-out;
-}
-
-.duration-300 {
-  transition-duration: 300ms;
-}
-
-.p-8 {
-  padding: 32px;
-}
-
-.rounded-xl {
-  border-radius: 12px;
-}
-
-.shadow-2xl {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-.max-w-md {
-  max-width: 448px;
-}
-
-.transform {
-  transform: translate(0, 0);
-}
-
-.transition-transform {
-  transition: transform 0.3s ease-in-out;
+.text-black {
+  color: #000000;
 }
 
 .text-2xl {
@@ -173,10 +137,6 @@ body {
 
 .text-gray-light {
   color: #d1d5db;
-}
-
-.justify-end {
-  justify-content: flex-end;
 }
 
 .space-x-4 > * + * {
@@ -303,78 +263,42 @@ tr:hover {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
 }
 
-#modal {
-  z-index: 2000;
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+/* Bootstrap Modal Customizations */
+.custom-modal-position {
+  position: absolute;
+  top: 200px;
+  left: 50px;
+  transform: translate(0, 0) !important;
+  margin: 0 !important;
 }
 
-#modal:not(.hidden) {
-  opacity: 1;
-}
-
-#modal > div {
+.modal-content.bg-gray-400 {
   background-color: #9ca3af;
   border: 1px solid #4b5563;
-  transform: scale(0);
-  transition: transform 0.3s ease-in-out;
-  z-index: 2001;
 }
 
-#modal:not(.hidden) > div {
-  transform: scale(1);
-}
-
-#modalTitle {
-  color: #000000;
-  text-shadow: none;
-}
-
-#modalMessage {
+.modal-title, .modal-body {
   color: #000000;
 }
 
-#modalMessage strong {
-  color: #000000;
-  font-weight: bold;
-}
-
-#modalConfirm {
+.modal-footer .btn-primary {
   background-color: #1e40af;
+  border-color: #1e40af;
 }
 
-#modalConfirm:hover {
+.modal-footer .btn-primary:hover {
   background-color: #2563eb;
+  border-color: #2563eb;
 }
 
-#modalCancel {
+.modal-footer .btn-secondary {
   background-color: #4b5563;
+  border-color: #4b5563;
 }
 
-#modalCancel:hover {
+.modal-footer .btn-secondary:hover {
   background-color: #6b7280;
-}
-
-#approveModal {
-  z-index: 2000;
-}
-
-#approveModal:not(.hidden) {
-  opacity: 1;
-}
-
-#approveModal > div {
-  background-color: #9ca3af;
-  border: 1px solid #4b5563;
-  z-index: 2001;
-}
-
-#approveModalTitle {
-  color: #000000;
-}
-
-#approveModalMessage {
-  color: #000000;
+  border-color: #6b7280;
 }
 
 .flatpickr-calendar {

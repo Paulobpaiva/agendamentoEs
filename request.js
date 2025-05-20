@@ -38,35 +38,34 @@ async function updateRoute(destinationAddress) {
 
 function showModal(title, message, showCancel = false) {
   console.log('Exibindo modal:', title, message);
-  const modal = document.getElementById('modal');
-  if (!modal) {
-    console.error('Elemento modal não encontrado');
-    return;
-  }
-  const modalContent = modal.querySelector('div');
+  const modal = new bootstrap.Modal(document.getElementById('requestModal'));
   const modalTitle = document.getElementById('modalTitle');
   const modalMessage = document.getElementById('modalMessage');
-  if (!modalTitle || !modalMessage) {
-    console.error('Elementos modalTitle ou modalMessage não encontrados');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalConfirm = document.getElementById('modalConfirm');
+
+  if (!modalTitle || !modalMessage || !modalCancel || !modalConfirm) {
+    console.error('Elementos do modal não encontrados');
     return;
   }
+
   modalTitle.textContent = title;
   modalMessage.innerHTML = message;
-  document.getElementById('modalCancel').classList.toggle('hidden', !showCancel);
-  document.getElementById('modalConfirm').textContent = showCancel ? 'Confirmar' : 'OK';
-  document.getElementById('modalConfirm').onclick = () => {
-    modal.classList.add('hidden');
+  modalCancel.classList.toggle('hidden', !showCancel);
+  modalConfirm.textContent = showCancel ? 'Confirmar' : 'OK';
+
+  modalConfirm.onclick = () => {
+    modal.hide();
     if (title === 'Sucesso') {
       document.getElementById('requestForm').reset();
       if (flatpickrInstance) flatpickrInstance.clear();
     }
   };
   if (showCancel) {
-    document.getElementById('modalCancel').onclick = () => modal.classList.add('hidden');
+    modalCancel.onclick = () => modal.hide();
   }
-  modal.classList.remove('hidden');
-  modalContent.classList.remove('scale-0');
-  modalContent.classList.add('scale-100');
+
+  modal.show();
 }
 
 async function sendConfirmationEmail(email, request) {
